@@ -1,0 +1,496 @@
+DROP TABLE tblInquiryLog;
+DROP TABLE tblUserInfo;
+DROP TABLE tblfavorite;
+DROP TABLE tblBlock;
+DROP TABLE tblblocktype;
+DROP TABLE tblwithdrawtype;
+DROP TABLE tblWithdraw;
+drop table tblQuestionAndAnswer;
+DROP TABLE tblfaq;
+drop table tblQuestionImg;
+DROP TABLE tblQuestion;
+drop table tblQuestionType;
+drop table tblreview;
+DROP TABLE tblComComment;
+DROP TABLE tblCommunityImage;
+DROP TABLE tblBid;
+DROP table tblProductImage;
+DROP table tblSearch;
+DROP table tblMessage;
+DROP table tblNoticeImg;
+DROP table tblProductComment;
+DROP TABLE tblvisit;
+DROP TABLE tbluserprofile;
+drop table tblNotice;
+DROP TABLE tblDeal;
+drop table tblCommunity;
+DROP TABLE tblProduct;
+DROP TABLE tblProductType;
+DROP TABLE tblUser;
+DROP TABLE tblAddress;
+
+DROP SEQUENCE inquiry_log_seq;
+DROP SEQUENCE address_seq;
+DROP SEQUENCE product_type_seq;
+DROP SEQUENCE product_seq;
+DROP SEQUENCE favorite_seq;
+DROP SEQUENCE blocktype_seq;
+DROP SEQUENCE withdrawtype_seq;
+DROP SEQUENCE question_seq;
+drop sequence community_seq;
+drop sequence question_type_seq;
+drop sequence Notice_seq;
+drop sequence questionImg_seq;
+DROP SEQUENCE deal_seq;
+DROP SEQUENCE comcomment_seq;
+DROP SEQUENCE community_img_seq;
+DROP SEQUENCE bid_seq;
+DROP SEQUENCE product_img_seq;
+DROP SEQUENCE search_seq;
+DROP SEQUENCE message_seq;
+DROP SEQUENCE notice_img_seq;
+DROP SEQUENCE product_comment_seq;
+DROP SEQUENCE faq_seq;
+
+
+CREATE TABLE tblUser (
+    id VARCHAR2(100) NOT NULL, -- 영소문자+숫자 4~12자 (user1)
+    password VARCHAR2(100) NOT NULL, --영소문자+숫자 6~10자
+    user_level NUMBER NOT NULL --회원,2-관리자
+);
+
+ALTER TABLE tblUser
+    ADD CONSTRAINT tblU_id_pk PRIMARY KEY (id);
+
+
+CREATE TABLE tblAddress (
+	address_seq	NUMBER	NOT NULL,
+	sido VARCHAR2(15)	NOT NULL,--팔도,서울시
+	sgg	VARCHAR2(15)	NOT NULL,--
+	emd	VARCHAR2(15)	NOT NULL
+);
+
+ALTER TABLE tblAddress ADD CONSTRAINT PK_TBLADDRESS PRIMARY KEY (address_seq);
+CREATE SEQUENCE address_seq;
+
+
+
+CREATE TABLE tblUserInfo (
+    id VARCHAR2(100) NOT NULL, 
+    address_seq NUMBER NOT NULL, --fk 설정 
+    name VARCHAR2(21) NOT NULL, --한글2~5자
+    address VARCHAR2(100) NOT NULL, --상세주소, 랜덤 더미
+    tel VARCHAR2(100) NOT NULL, --숫자만 11
+    email VARCHAR2(90) NOT NULL, --@알아서
+    birth DATE NOT NULL, --랜덤
+    gender CHAR(1) NOT NULL, --F/M
+    since DATE default sysdate NOT NULL --알아서
+);
+
+ALTER TABLE tblUserInfo
+    ADD CONSTRAINT tblUI_id_pk PRIMARY KEY (id);
+    
+ALTER TABLE tblUserInfo
+    ADD CONSTRAINT tblUI_id_fk FOREIGN KEY (id) REFERENCES tblUser(id);
+    
+ALTER TABLE tblUserInfo
+    ADD CONSTRAINT tblUI_gender_ck CHECK (gender in ('f','m'));
+    
+ALTER TABLE tblUserInfo
+    ADD CONSTRAINT tblUI_address_seq_fk FOREIGN KEY (address_seq) REFERENCES tblAddress(address_seq);
+
+
+CREATE TABLE tblProductType (
+	product_type_seq	NUMBER	NOT NULL,
+	name	VARCHAR2(100)	NOT NULL
+);
+
+CREATE SEQUENCE product_type_seq;
+
+ALTER TABLE tblProductType ADD CONSTRAINT tblPT_product_type_seq_pk PRIMARY KEY(product_type_seq);
+
+
+CREATE TABLE tblProduct (
+	product_seq	NUMBER	NOT NULL,               --상품번호(PK)
+	id	VARCHAR2(100)	NOT NULL,               --판매자 아이디(FK). USER1~100
+	address_seq	NUMBER	NOT NULL,               --지역번호(FK) 30개
+	product_type_seq	NUMBER	NOT NULL,       --상품유형(FK) 알아서
+	name	VARCHAR2(100)	NOT NULL,           --상품이름   수식어+명사
+	price	NUMBER	NOT NULL,                   --상품가격 1000~1000000
+	is_auction CHAR(1)	DEFAULT 'n' NOT NULL,   --경매여부 n/y
+	content	VARCHAR2(4000)	NOT NULL,           --상세내용 수식어+이유+추천
+	regdate DATE DEFAULT sysdate NOT NULL,      --작성날짜   알아서.. 
+	is_completion CHAR(1) DEFAULT 'n' NOT NULL, --판매여부 n/y..
+	readcount NUMBER DEFAULT 0 NOT NULL,        --조회수 랜덤…
+	is_deletion CHAR(1) DEFAULT 'n' NOT NULL	--삭제여부
+);
+
+CREATE SEQUENCE product_seq;
+
+ALTER TABLE tblProduct ADD CONSTRAINT tblProduct_product_seq_pk PRIMARY KEY(product_seq);
+ALTER TABLE tblProduct ADD CONSTRAINT tblProduct_id_fk FOREIGN KEY(id) REFERENCES tblUser(id);
+ALTER TABLE tblProduct ADD CONSTRAINT tblProduct_address_seq_fk FOREIGN KEY(address_seq) REFERENCES tblAddress(address_seq);
+ALTER TABLE tblProduct ADD CONSTRAINT tblProduct_product_type_fk FOREIGN KEY(product_type_seq) REFERENCES tblProductType(product_type_seq);
+ALTER TABLE tblProduct ADD CONSTRAINT tblProduct_is_auction_ck CHECK(is_auction IN ('n', 'y'));
+ALTER TABLE tblProduct ADD CONSTRAINT tblProduct_is_completion_ck CHECK(is_completion IN ('n', 'y'));
+
+
+REATE TABLE tblFavorite (
+    favorite_seq NUMBER NOT NULL,
+    id VARCHAR2(100) NOT NULL,
+    product_seq NUMBER NOT NULL
+); --100
+
+CREATE SEQUENCE favorite_seq;
+
+ALTER TABLE tblfavorite
+    ADD CONSTRAINT tblF_favorite_seq_pk PRIMARY KEY (favorite_seq);
+
+ALTER TABLE tblfavorite
+    ADD CONSTRAINT tblF_product_seq_fk FOREIGN KEY (product_seq) REFERENCES tblProduct (product_seq);
+
+ALTER TABLE tblfavorite
+    ADD CONSTRAINT tblF_id_fk FOREIGN KEY (id) REFERENCES tblUser(id);
+
+
+CREATE SEQUENCE blocktype_seq;
+
+CREATE TABLE tblblocktype (
+	block_type_seq	NUMBER NOT NULL,
+	TYPE VARCHAR2(30) NOT NULL
+);
+
+ALTER TABLE tblblocktype ADD CONSTRAINT tblb_block_type_seq_pk PRIMARY KEY (block_type_seq);
+
+
+CREATE TABLE tblBlock (
+    id	VARCHAR2(100)	NOT NULL,
+    block_type_seq	NUMBER	NOT NULL, --5
+    regdate	DATE default sysdate	NOT NULL
+);
+
+ALTER TABLE tblBlock
+    ADD CONSTRAINT tblB_id_pk PRIMARY KEY (id);
+    
+ALTER TABLE tblBlock
+    ADD CONSTRAINT tblB_id_fk FOREIGN KEY (id) REFERENCES tblUser(id);
+    
+ALTER TABLE tblBlock
+    ADD CONSTRAINT tblB_block_type_seq_fk FOREIGN KEY (block_type_seq) REFERENCES tblBlockType(block_type_seq);
+
+
+CREATE SEQUENCE withdrawtype_seq;
+
+CREATE TABLE tblwithdrawtype (
+	withdraw_type_seq NUMBER NOT NULL,
+	TYPE VARCHAR2(30) NOT NULL
+);
+ALTER TABLE tblwithdrawtype ADD CONSTRAINT tblw_withdraw_type_seq_pk PRIMARY KEY (withdraw_type_seq);
+
+
+
+CREATE TABLE tblWithdraw (
+    id VARCHAR2(100) NOT NULL,
+    withdraw_type_seq NUMBER NOT NULL,
+    time DATE default sysdate NOT NULL
+);--20명
+
+ALTER TABLE tblWithdraw
+    ADD CONSTRAINT tblW_id_pk PRIMARY KEY (id);
+    
+ALTER TABLE tblWithdraw
+    ADD CONSTRAINT tblW_id_fk FOREIGN KEY (id) REFERENCES tblUser (id);
+
+
+CREATE TABLE tblQuestionType (
+	question_type_seq number not null,
+	type varchar2(30) NOT NULL
+);
+
+
+create sequence question_type_seq start with 1;
+
+
+ALTER TABLE tblQuestionType 
+    ADD CONSTRAINT tblQ_question_seq_pk PRIMARY KEY (question_type_seq);
+
+CREATE TABLE tblQuestion (
+    question_seq	number	NOT NULL, 
+    id	VARCHAR2(100)	NULL,
+    question_type_seq number	NULL,
+    title	varchar2(100)	NOT NULL,
+    content	varchar2(4000)	NOT NULL,
+    regdate	date default sysdate NOT NULL
+);
+
+CREATE SEQUENCE question_seq;
+
+ALTER TABLE tblQuestion 
+    ADD CONSTRAINT tblQ_question_seq PRIMARY KEY (question_seq);
+
+ALTER TABLE tblQuestion
+    ADD CONSTRAINT tblQ_id_fk FOREIGN KEY (id) REFERENCES tblUser (id);
+
+ALTER TABLE tblQuestion
+    ADD CONSTRAINT tblQ_question_type_seq_fk FOREIGN KEY (question_type_seq) REFERENCES tblQuestionType (question_type_seq);
+
+
+CREATE TABLE tblQuestionAndAnswer(
+	question_seq NUMBER not null,
+    regDate Date default sysdate not null,
+	content varchar2(4000) NOT NULL
+);
+
+
+
+alter table tblQuestionAndAnswer 
+    add constraint tblqaa_question_seq_pk primary key(question_seq);
+alter table tblQuestionAndAnswer 
+    add constraint tblqaa_question_seq_fk foreign key(question_seq) references tblQuestion(question_seq);
+
+
+CREATE TABLE tblNotice (
+	notice_seq number not null,
+	title varchar2(100)	NOT NULL,
+	content varchar2(4000) NOT NULL,
+	regdate date default sysdate NOT NULL
+);
+
+
+create sequence Notice_seq start with 1;
+
+alter table tblNotice 
+    add constraint tbln_notice_type_pk primary key(notice_seq);
+
+
+
+CREATE TABLE tblQuestionImg (
+	questionImg_seq number not null, 
+	question_seq number	NULL, 
+	path varchar2(4000)	NOT NULL  
+);
+
+
+create sequence questionImg_seq start with 1;
+
+alter table tblQuestionImg 
+    add constraint tblqi_questionImg_seq_pk primary key(questionImg_seq);
+alter table tblQuestionImg 
+    add constraint tblqi_questionImg_seq_fk Foreign key(question_seq) references tblQuestion(question_seq);
+
+
+CREATE TABLE tblDeal (
+	deal_seq	NUMBER	NOT NULL,           
+	id	VARCHAR2(100)	NOT NULL,           
+	product_seq	NUMBER	NOT NULL,
+	price	NUMBER	NOT NULL,
+	regdate DATE DEFAULT sysdate NOT NULL
+);
+
+CREATE SEQUENCE deal_seq;
+
+ALTER TABLE tblDeal ADD CONSTRAINT tblDeal_deal_seq_pk PRIMARY KEY(deal_seq);
+ALTER TABLE tblDeal ADD CONSTRAINT tblDeal_id_fk FOREIGN KEY(id) REFERENCES tblUser(id);
+ALTER TABLE tblDeal ADD CONSTRAINT tblDeal_product_seq_fk FOREIGN KEY(product_seq) REFERENCES tblProduct(product_seq);
+
+
+
+CREATE TABLE tblReview(
+	type CHAR(1) NOT NULL,
+	deal_seq NUMBER NOT NULL,
+	score NUMBER NOT NULL, 
+	content VARCHAR2(300) NOT NULL 
+);
+
+
+alter table tblReview 
+    add constraint tblr_review_pk PRIMARY KEY(type, deal_seq);
+alter table tblReview
+    add constraint tblr_deal_seq_fk FOREIGN KEY(deal_seq) references tblDeal(deal_seq);
+alter table tblReview
+    add constraint tblr_type_ck check(type in ('S','B'));
+
+
+CREATE TABLE tblCommunity(
+	community_seq NUMBER not null, 
+	id VARCHAR2(100) NOT NULL,
+	title VARCHAR2(100)	NOT NULL, --20자
+    content VARCHAR2(4000) NOT NULL,--200자
+	regDate DATE default sysdate NOT NULL,--랜덤 과거 28일 이전
+    readcount NUMBER default 0 NOT NULL --0
+); --100
+
+
+create sequence community_seq start with 1;
+
+alter table tblCommunity
+    add constraint tblc_community_seq_pk primary key(community_seq);
+alter table tblCommunity
+    add constraint tblc_id_fk FOREIGN Key(id) references tblUser(id);
+
+
+
+CREATE TABLE tblComComment (
+	comcomment_seq	NUMBER	NOT NULL,       --댓글 번호(PK) 
+	community_seq	NUMBER	NOT NULL,       --글 번호(FK) --100
+	id	VARCHAR2(100)	NOT NULL,           --작성자 id(FK)
+	content	VARCHAR2(4000)	NOT NULL,       --내용 20자
+	regdate DATE DEFAULT sysdate NOT NULL   --작성날짜 28일 이전
+); --100
+
+CREATE SEQUENCE comcomment_seq;
+
+ALTER TABLE tblComComment ADD CONSTRAINT tblCC_comcomment_seq_pk PRIMARY KEY(comcomment_seq);
+ALTER TABLE tblComComment ADD CONSTRAINT tblCC_community_seq_fk FOREIGN KEY(community_seq) REFERENCES tblCommunity(community_seq);
+ALTER TABLE tblComComment ADD CONSTRAINT tblCC_id_fk FOREIGN KEY(id) REFERENCES tblUser(id);
+
+
+CREATE TABLE tblCommunityImage (
+	community_img_seq	NUMBER	NOT NULL,   --이미지번호(PK)
+	community_seq	NUMBER	NOT NULL,       --글번호(FK)
+	path	VARCHAR2(4000)	NOT NULL        --이미지경로
+);
+
+CREATE SEQUENCE community_img_seq;
+
+ALTER TABLE tblCommunityImage ADD CONSTRAINT tblCI_community_img_seq_pk PRIMARY KEY(community_img_seq);
+ALTER TABLE tblCommunityImage ADD CONSTRAINT tblCI_community_seq_fk FOREIGN KEY(community_seq) REFERENCES tblCommunity(community_seq);
+
+
+CREATE TABLE tblBid (
+	bid_seq	NUMBER	NOT NULL,
+	id	VARCHAR2(100)	NOT NULL,
+	product_seq	NUMBER	NOT NULL, --160
+	price	NUMBER	NOT NULL, -- 1000~100000
+	time	DATE	DEFAULT sysdate NOT NULL
+); --짝수 경매 , 홀수 일반
+
+CREATE SEQUENCE bid_seq;
+
+ALTER TABLE tblBid ADD CONSTRAINT tblBid_bid_seq_pk PRIMARY KEY(bid_seq);
+ALTER TABLE tblBid ADD CONSTRAINT tblBid_id_fk FOREIGN KEY(id) REFERENCES tblUser(id);
+ALTER TABLE tblBid ADD CONSTRAINT tblBid_product_seq_fk FOREIGN KEY(product_seq) REFERENCES tblProduct(product_seq);
+
+
+CREATE TABLE tblProductImage (
+	product_img_seq	NUMBER	NOT NULL,
+	product_seq	NUMBER	NOT NULL,
+	path VARCHAR2(4000)	NOT NULL
+);
+CREATE SEQUENCE product_img_seq;
+
+CREATE TABLE tblSearch (
+	search_seq	number	NOT NULL,
+	keyword	varchar2(90)	NOT NULL, --알아서
+	time date DEFAULT sysdate	NOT NULL
+);--100개
+CREATE SEQUENCE search_seq;
+
+CREATE TABLE tblMessage (
+	message_seq	number NOT NULL,
+	sender_id	VARCHAR2(100) NOT NULL, --fk
+	receiver_id	VARCHAR2(100) NOT NULL, --fk
+	content	varchar2(4000) NOT NULL, -- 10자
+	sendtime DATE DEFAULT sysdate NOT NULL,
+	is_check CHAR(1) NOT NULL --
+); --100
+CREATE SEQUENCE message_seq;
+
+CREATE TABLE tblNoticeImg (
+	notice_img_seq	NUMBER	NOT NULL,
+	notice_seq	number	NOT NULL,
+	path varchar2(4000)	NOT NULL
+); --나중에
+CREATE SEQUENCE notice_img_seq;
+
+
+CREATE TABLE tblProductComment (
+	product_comment_seq	NUMBER NOT NULL,
+	product_seq	NUMBER NOT NULL,
+	id VARCHAR2(100) NOT NULL,
+	comments VARCHAR2(4000) NOT NULL, --100자
+	time DATE DEFAULT sysdate NOT NULL 
+); --100개
+CREATE SEQUENCE product_comment_seq;
+
+ALTER TABLE tblProductImage ADD CONSTRAINT PK_TBLPRODUCTIMAGE PRIMARY KEY (product_img_seq);
+
+ALTER TABLE tblSearch ADD CONSTRAINT PK_TBLSEARCH PRIMARY KEY (search_seq);
+
+ALTER TABLE tblMessage ADD CONSTRAINT PK_TBLMESSAGE PRIMARY KEY (message_seq);
+
+ALTER TABLE tblNoticeImg ADD CONSTRAINT PK_TBLNOTICEIMG PRIMARY KEY (notice_img_seq);
+
+ALTER TABLE tblProductComment ADD CONSTRAINT PK_TBLPRODUCTCOMMENT PRIMARY KEY (product_comment_seq);
+
+ALTER TABLE tblProductImage ADD CONSTRAINT FK_tblP_TO_tblPImage FOREIGN KEY (product_seq)
+REFERENCES tblProduct (product_seq);
+
+ALTER TABLE tblMessage ADD CONSTRAINT FK_send_id FOREIGN KEY (sender_id)
+REFERENCES tblUser (id);
+
+ALTER TABLE tblMessage ADD CONSTRAINT FK_receive_id FOREIGN KEY (receiver_id)
+REFERENCES tblUser (id);
+
+ALTER TABLE tblNoticeImg ADD CONSTRAINT FK_tblN_TO_tblNImg FOREIGN KEY (notice_seq)
+REFERENCES tblNotice (notice_seq);
+
+ALTER TABLE tblProductComment ADD CONSTRAINT FK_tblP_TO_tblPComment FOREIGN KEY (product_seq)
+REFERENCES tblProduct (product_seq);
+
+ALTER TABLE tblProductComment ADD CONSTRAINT FK_tblUser_TO_tblPComment FOREIGN KEY (id)
+REFERENCES tblUser (id);
+
+ALTER TABLE tblMessage ADD CONSTRAINT CK_tblMessage_check check(is_check in ('N','Y'));
+
+
+CREATE TABLE tblvisit (
+	regdate	DATE DEFAULT sysdate NOT NULL,--2020~
+	COUNT NUMBER DEFAULT 0 NOT NULL --1000~5000
+); --100
+ALTER TABLE tblvisit ADD CONSTRAINT tblv_regdate_pk PRIMARY KEY (regdate);
+-- 접속 테이블
+
+
+CREATE SEQUENCE faq_seq;
+CREATE TABLE tblfaq (
+	faq_seq	NUMBER NOT NULL,
+	question_type_seq NUMBER NOT NULL, --5
+	title VARCHAR2(100) NOT NULL, --20자
+	CONTENTS VARCHAR2(4000)	NOT NULL --200자
+);  --100개
+ALTER TABLE tblfaq ADD CONSTRAINT tblf_faq_seq_pk PRIMARY KEY (faq_seq);
+ALTER TABLE tblfaq ADD CONSTRAINT tblf_question_type_seq_fk FOREIGN KEY (question_type_seq)
+    REFERENCES tblquestiontype (question_type_seq);
+--자주묻는질문
+
+
+
+CREATE TABLE tbluserprofile (
+	ID VARCHAR2(100) NOT NULL,-- 식별 
+	nickname VARCHAR2(45) NOT NULL, --한글 15자, 영어 45자
+	intro VARCHAR2(300) NOT NULL, --30
+	PATH VARCHAR2(4000) NOT NULL --profileimg1~100?
+); --100개 나중에
+ALTER TABLE tbluserprofile ADD CONSTRAINT tblup_id_pk PRIMARY KEY (ID);
+ALTER TABLE tbluserprofile ADD CONSTRAINT tblup_nickname_unique UNIQUE(nickname);
+ALTER TABLE tbluserprofile ADD CONSTRAINT tblup_id_fk FOREIGN KEY (ID)
+    REFERENCES tbluser (ID);
+
+
+
+CREATE SEQUENCE inquiry_log_seq;
+
+alter table tblInquiryLog 
+    add constraint inquiry_log_seq_pk primary key(inquiry_log_seq);
+    
+alter table tblInquiryLog 
+    add constraint product_seq_fk Foreign key(product_seq) references tblProduct(product_seq);
+    
+alter table tblInquiryLog 
+    add constraint id_fk Foreign key(id) references tblUser(id);
+
+
+
+commit;
+    
